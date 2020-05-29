@@ -5,9 +5,12 @@
 package it.polito.tdp.rivers;
 
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.rivers.model.Model;
+import it.polito.tdp.rivers.model.River;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -25,7 +28,7 @@ public class FXMLController {
     private URL location;
 
     @FXML // fx:id="boxRiver"
-    private ComboBox<?> boxRiver; // Value injected by FXMLLoader
+    private ComboBox<River> boxRiver; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtStartDate"
     private TextField txtStartDate; // Value injected by FXMLLoader
@@ -47,6 +50,51 @@ public class FXMLController {
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
+    
+    @FXML
+    void choice(ActionEvent event) {
+    	//pulisco i dati
+    	txtStartDate.clear();
+    	txtEndDate.clear();
+    	txtNumMeasurements.clear();
+    	txtFMed.clear();
+    	//li inizializzo
+    	model.setListaMisurazioni(boxRiver.getValue());
+    	model.setFlussoMedio();
+    	
+    	//li metto in output
+    	txtStartDate.setText(model.getDataInizio().toString());
+    	txtEndDate.setText(model.getDataFine().toString());
+    	txtNumMeasurements.setText(""+(model.getListaMisurazioni().size()+""));
+    	txtFMed.setText(""+model.getFlussoMedio()+"");
+    	
+    	btnSimula.setDisable(false);
+    	
+    }
+    
+    @FXML
+    void simula(ActionEvent event) {
+    	txtResult.clear();
+    	double k =0;
+    	try {
+    		k = Double.parseDouble(txtK.getText());
+    	}catch(NumberFormatException nfe) {
+    		
+    		txtResult.setText("ECCEZIONE! Introdurre un numero!");
+    	}
+    	if(k>0) {
+    		this.model.simulazione(k);
+    		txtResult.appendText("Numero di giorni inoddisfatti: "+ this.model.getNumInsoddisfatti());
+    		txtResult.appendText("\nCapacità media: "+ this.model.getCapacitaMedia());
+    		txtResult.appendText("\n\nGiorni non soddisfatti:");
+    		for(LocalDate g: this.model.getGiorniInsoddisfacienti()) {
+    			txtResult.appendText("\n"+g.toString());
+    		}
+    		
+    	}
+    	
+
+    }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
@@ -62,5 +110,9 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	boxRiver.getItems().addAll(model.getRivers());
+    	
+    	btnSimula.setDisable(true);
+    	
     }
 }
