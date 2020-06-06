@@ -57,7 +57,7 @@ public class RiversDAO {
 			
 			while(rs.next()) {
 				
-				result.add(new Flow(rs.getDate("day").toLocalDate(), rs.getDouble("flow"), river));
+				result.add(new Flow(rs.getDate("day").toLocalDate(), rs.getDouble("flow")*3600*24, river));
 							
 			}
 			conn.close();
