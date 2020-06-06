@@ -5,11 +5,11 @@
 package it.polito.tdp.rivers;
 
 import java.net.URL;
-import java.time.LocalDate;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.rivers.model.Model;
 import it.polito.tdp.rivers.model.River;
+import it.polito.tdp.rivers.model.SimulationResult;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -52,48 +52,28 @@ public class FXMLController {
     private TextArea txtResult; // Value injected by FXMLLoader
     
     @FXML
-    void choice(ActionEvent event) {
-    	//pulisco i dati
-    	txtStartDate.clear();
-    	txtEndDate.clear();
-    	txtNumMeasurements.clear();
-    	txtFMed.clear();
-    	//li inizializzo
-    	model.setListaMisurazioni(boxRiver.getValue());
-    	model.setFlussoMedio();
-    	
-    	//li metto in output
-    	txtStartDate.setText(model.getDataInizio().toString());
-    	txtEndDate.setText(model.getDataFine().toString());
-    	txtNumMeasurements.setText(""+(model.getListaMisurazioni().size()+""));
-    	txtFMed.setText(""+model.getFlussoMedio()+"");
-    	
-    	btnSimula.setDisable(false);
-    	
+    void doSimula(ActionEvent event) {
+    	try {
+			double k = Double.parseDouble(txtK.getText());
+			SimulationResult sr = model.simulate(boxRiver.getValue(), k);
+			txtResult.setText("Numero di giorni \"critici\": "
+					+ sr.getNumberOfDays() + "\n");
+			txtResult.appendText("Occupazione media del bacino: " + sr.getAvgC() + "\n");
+			txtResult.appendText("SIMULAZIONE TERMINATA!\n");
+		} catch (NumberFormatException nfe) {
+			txtResult.setText("Devi inserire un valore numerico per il fattore k");
+		}
     }
     
     @FXML
-    void simula(ActionEvent event) {
-    	txtResult.clear();
-    	double k =0;
-    	try {
-    		k = Double.parseDouble(txtK.getText());
-    	}catch(NumberFormatException nfe) {
-    		
-    		txtResult.setText("ECCEZIONE! Introdurre un numero!");
+    void setData(ActionEvent event) {
+    	River newValue = boxRiver.getValue();
+    	if(newValue != null) {
+	    	txtStartDate.setText(model.getStartDate(newValue).toString());
+			txtEndDate.setText(model.getEndDate(newValue).toString());
+			txtNumMeasurements.setText(String.valueOf(model.getNumMeasurements(newValue)));
+			txtFMed.setText(String.valueOf(model.getFMed(newValue)));
     	}
-    	if(k>0) {
-    		this.model.simulazione(k);
-    		txtResult.appendText("Numero di giorni inoddisfatti: "+ this.model.getNumInsoddisfatti());
-    		txtResult.appendText("\nCapacità media: "+ this.model.getCapacitaMedia());
-    		txtResult.appendText("\n\nGiorni non soddisfatti:");
-    		for(LocalDate g: this.model.getGiorniInsoddisfacienti()) {
-    			txtResult.appendText("\n"+g.toString());
-    		}
-    		
-    	}
-    	
-
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -111,8 +91,6 @@ public class FXMLController {
     public void setModel(Model model) {
     	this.model = model;
     	boxRiver.getItems().addAll(model.getRivers());
-    	
-    	btnSimula.setDisable(true);
     	
     }
 }

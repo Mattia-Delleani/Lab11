@@ -1,9 +1,8 @@
 package it.polito.tdp.rivers.db;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import it.polito.tdp.rivers.model.Flow;
 import it.polito.tdp.rivers.model.River;
@@ -40,35 +39,31 @@ public class RiversDAO {
 		return rivers;
 	}
 	
-	public List<Flow> getMesuramentByRiver(River river) {
+	public List<Flow> getFlows(River river) {
 		
-		String sql="SELECT `day`, flow, river " + 
-				"FROM flow " + 
-				"WHERE river=? " + 
-				"ORDER BY (`day`) ASC";
-		List<Flow> result = new ArrayList<>();
+		final String sql = "SELECT id, day, flow FROM flow WHERE river=?";
+
+		List<Flow> flows = new LinkedList<Flow>();
+
 		try {
 			Connection conn = DBConnect.getConnection();
 			PreparedStatement st = conn.prepareStatement(sql);
 			st.setInt(1, river.getId());
-			ResultSet rs = st.executeQuery();
-			
-			
-			
-			while(rs.next()) {
-				
-				result.add(new Flow(rs.getDate("day").toLocalDate(), rs.getDouble("flow")*3600*24, river));
-							
-			}
-			conn.close();
-			return result;
-			
-			
-		}catch(SQLException e) {
-			throw new RuntimeException("SQL Error");
+			ResultSet res = st.executeQuery();
 
+			while (res.next()) {
+				flows.add(new Flow(res.getDate("day").toLocalDate(), res.getDouble("flow"), river));
+			}
+			Collections.sort(flows);
+			river.setFlows(flows);
 			
+			conn.close();
+		} catch (SQLException e) {
+			//e.printStackTrace();
+			throw new RuntimeException("SQL Error");
 		}
-		
+
+		return flows;
 	}
+
 }
